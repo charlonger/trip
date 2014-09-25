@@ -19,5 +19,6 @@
 //	return View::make('hello');
 //});
 
-Route::get('/', 'HomeController@showWelcome');
+Route::get('/', 'IndexController@index');
+Route::any('/login.html', 'IndexController@login');
 Route::get('/seller.line.html', 'SellerLineController@index');
