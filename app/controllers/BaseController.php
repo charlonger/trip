@@ -1,6 +1,11 @@
 <?php
 
 class BaseController extends Controller {
+    private $user = '';
+
+    public function __construct() {
+        $this->user = (new User)->checkLogin();
+    }
 
 	/**
 	 * Setup the layout used by the controller.
