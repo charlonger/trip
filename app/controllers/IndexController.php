@@ -2,7 +2,7 @@
 class IndexController extends BaseController {
     public function index()
     {
-        return View::make('index');
+        Assets::add('jquery', 'js/jquery.js');
     }
 
     public function login()
@@ -12,7 +12,6 @@ class IndexController extends BaseController {
          */
         $formData = Input::all();
         $modelUser = new User();
-
         $result = $modelUser->login($formData);
         if($result['code'] == User::LOGIN_STATUS_SUCCESS) {
             // 存储到cookie, 下次不用访问
@@ -23,6 +22,7 @@ class IndexController extends BaseController {
     }
 
     public function register() {
+
         $formData = Input::all();
         $modelUser = new User();
         $result = $modelUser->register($formData);
@@ -31,5 +31,6 @@ class IndexController extends BaseController {
         } else {
             print_r($result);
         }
+
     }
 }

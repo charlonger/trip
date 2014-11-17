@@ -20,5 +20,14 @@
 //});
 
 Route::get('/', 'IndexController@index');
-Route::any('/login.html', 'IndexController@login');
+Route::get('/login.html', function(){
+    return View::make('login');
+});
+Route::post('/login.html', 'IndexController@login');
+Route::get('/register.html', function(){
+    return View::make('register');
+});
+Route::post('/register.html', 'IndexController@register');
+
+
 Route::get('/seller.line.html', 'SellerLineController@index');

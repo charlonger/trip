@@ -1,5 +1,3 @@
-<?php echo Asset::styles(); ?>
-<?php echo Asset::scripts(); ?>
 <form method="post" action="login.html">
     账号：<input type="text" name="username" /><br />
     密码：<input type="password" name="password" /><br />

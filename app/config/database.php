@@ -54,10 +54,10 @@ return array(
 
 		'mysql' => array(
 			'driver'    => 'mysql',
-			'host'      => '192.168.1.127',
-			'database'  => 'www_happytoo_cn_v3',
-			'username'  => 'wgy',
-			'password'  => '8xkl143a',
+			'host'      => '127.0.0.1',
+			'database'  => 'www_tripb2b_com_data',
+			'username'  => 'root',
+			'password'  => '123.',
 			'charset'   => 'utf8',
 			'collation' => 'utf8_unicode_ci',
 			'prefix'    => '',

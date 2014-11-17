@@ -1,7 +1,7 @@
 <?php
 
 class BaseController extends Controller {
-    private $user = '';
+    protected $user = '';
 
     public function __construct() {
         $this->user = (new User)->checkLogin();

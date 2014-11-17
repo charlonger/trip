@@ -19,6 +19,7 @@ class HomeController extends BaseController {
 	{
         Config::set('database.default', 'mysql');
         $results = DB::select('select * from com_class ');
+
 		return View::make('hello');
 	}
 

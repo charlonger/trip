@@ -13,6 +13,8 @@ class User {
     const REG_STATUS_USERNAME_EXISTS = 210;
     const REG_STATUS_DIFF_PASSWORD_TWICE = 220;
     const REG_STATUS_INSERT_BAD = 230;
+    const REG_STATUS_USERNAME_EMPTY = 240;
+    const REG_STATUS_PASSWORD_EMPTY = 250;
 
     // 登陆后cookie键名
     const LOGIN_AUTH_NAME = 'login_auto';
@@ -28,13 +30,15 @@ class User {
             self::REG_STATUS_SUCCESS                    => '注册成功！',
             self::REG_STATUS_USERNAME_EXISTS            => '用户名已经存在！',
             self::REG_STATUS_DIFF_PASSWORD_TWICE        => '两次输入的密码不同！',
-            self::REG_STATUS_INSERT_BAD                 => '添加用户数据失败！'
+            self::REG_STATUS_INSERT_BAD                 => '添加用户数据失败！',
+            self::REG_STATUS_USERNAME_EMPTY            => '用户名为空！',
+            self::REG_STATUS_PASSWORD_EMPTY             => '密码为空！'
         ]
     ];
 
     public function login($params)
     {
-        $result = $this->getUser(['username'=>$params['username']])[0];
+        $result = $this->getUser(['username'=>$params['username']]);
         $loginStatus = self::LOGIN_STATUS_SUCCESS;
 
         if(!$result) {
@@ -45,26 +49,41 @@ class User {
             $loginStatus = self::LOGIN_STATUS_PASSWORD_WRONG;
         }
 
-        $this->_rememberLogin($this->getUser(['username'=>$params['username']]));
+        // 成功登陆保存登陆信息.
+        if($loginStatus == self::LOGIN_STATUS_SUCCESS) {
+            $this->_rememberLogin($result);
+        }
 
         return ['code'=>$loginStatus, 'msg'=>$this->_getStatusMessage('login', $loginStatus), 'data'=>$result];
     }
 
     public function register($params)
     {
-        $regStatus = self::REG_STATUS_SUCCESS;
-        $result = $this->getUser(['username'=>$params['username']]);
 
-        if($result) {
-            $regStatus = self::REG_STATUS_USERNAME_EXISTS;
+        $regStatus = self::REG_STATUS_SUCCESS;
+
+        if($regStatus == self::REG_STATUS_SUCCESS && empty($params['username'])) {
+            $regStatus = self::REG_STATUS_USERNAME_EMPTY;
+        }
+
+        if($regStatus == self::REG_STATUS_SUCCESS && (empty($params['password']) || empty($params['password2']))) {
+            $regStatus = self::REG_STATUS_PASSWORD_EMPTY;
         }
 
         if($regStatus == self::REG_STATUS_SUCCESS && $params['password'] != $params['password2']) {
             $regStatus = self::REG_STATUS_DIFF_PASSWORD_TWICE;
         }
 
+        if($regStatus == self::REG_STATUS_SUCCESS) {
+            $result = $this->getUser(['username'=>$params['username']]);
+            if($result) {
+                $regStatus = self::REG_STATUS_USERNAME_EXISTS;
+            }
+        }
+
+
         if($regStatus == self::REG_STATUS_SUCCESS ) {
-            $sql = "INSERT INTO com_member(username, loginpwd) VALUES({$params['username']}, {$params['password']})";
+            $sql = "INSERT INTO com_member(username, loginpwd) VALUES('{$params['username']}', '{$params['password']}')";
             if(!DB::insert($sql)) {
                 $regStatus == self::REG_STATUS_INSERT_BAD;
             }
@@ -95,16 +114,21 @@ class User {
 
     public function checkLogin() {
         $user = [];
-        $cookieArr = explode(',', Crypt::decrypt(Cookie::get(self::LOGIN_AUTH_NAME)));
-        if(sizeof($cookieArr)>0) {
-            $user = $this->getUser(['id'=>$cookieArr[0], 'username'=>$cookieArr[1]]);
+        $loginCookie = Cookie::get(self::LOGIN_AUTH_NAME);
+
+        if(!empty($loginCookie)) {
+            $cookieArr = explode(',', Crypt::decrypt(Cookie::get(self::LOGIN_AUTH_NAME)));
+            if(sizeof($cookieArr)>0) {
+                $user = $this->getUser(['id'=>$cookieArr[0], 'username'=>$cookieArr[1]]);
+            }
         }
+
         return $user;
     }
 
     private function _rememberLogin($user) {
-        $data = implode(',', [$user['id'], $user['username']]);
-        Cookie::make(self::LOGIN_AUTH_NAME, Crypt::decrypt($data));
+        $data = implode(',', [$user->id, $user->username]);
+        Cookie::make(self::LOGIN_AUTH_NAME, Crypt::encrypt($data), 3600 * 24);
     }
 
     public function logout(){
@@ -115,7 +139,6 @@ class User {
         $query = "";
         if(sizeof($params)>0) {
             foreach($params as $k=>$v) {
-                if(empty($v)) {continue;}
                 switch($k) {
                     case "username":
                         $query .= " AND username='{$v}'";
@@ -129,7 +152,7 @@ class User {
         }
 
         $result = DB::select("SELECT id, username, loginpwd FROM com_member WHERE 1 {$query}");
-        return $result;
+        return sizeof($result == 1) ? current($result) : $result;
     }
 
     /**
